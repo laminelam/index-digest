@@ -1,0 +1,46 @@
+"Test that the Hierarchical Index Digest plugin is loaded in OpenSearch":
+  - do:
+      cat.plugins:
+        local: true
+        h: component
+
+  - match:
+      $body: /^index-digest\n$/
+
+---
+"Test Hierarchical Index Digest read endpoints handle empty system index":
+  - do:
+      indices.create:
+        index: index-digest-yaml-test
+        body:
+          settings:
+            number_of_shards: 1
+            number_of_replicas: 0
+
+  - do:
+      index_digest.tree:
+        index: index-digest-yaml-test
+        shard_id: 0
+        allocation_id: missing-allocation
+        root_level: 20
+        root_bucket: 0
+        include_digest: false
+
+  - match: { index: index-digest-yaml-test }
+  - match: { root: null }
+
+  - do:
+      index_digest.compare:
+        left_index: index-digest-yaml-test
+        left_shard_id: 0
+        left_allocation_id: missing-left-allocation
+        right_index: index-digest-yaml-test
+        right_shard_id: 0
+        right_allocation_id: missing-right-allocation
+        root_level: 20
+        include_digest: false
+
+  - match: { comparable: false }
+  - match: { reason: missing_progress }
+  - match: { left.progress_found: false }
+  - match: { right.progress_found: false }

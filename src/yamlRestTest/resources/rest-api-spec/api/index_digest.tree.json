@@ -1,0 +1,48 @@
+{
+  "index_digest.tree": {
+    "stability": "experimental",
+    "url": {
+      "paths": [
+        {
+          "path": "/_plugins/_index_digest/{index}/_tree",
+          "methods": [
+            "GET"
+          ],
+          "parts": {
+            "index": {
+              "type": "string",
+              "description": "Index name"
+            }
+          }
+        }
+      ]
+    },
+    "params": {
+      "shard_id": {
+        "type": "number",
+        "description": "Shard id"
+      },
+      "allocation_id": {
+        "type": "string",
+        "description": "Shard allocation id"
+      },
+      "root_level": {
+        "type": "number",
+        "description": "Root bucket level"
+      },
+      "root_bucket": {
+        "type": "number",
+        "description": "Root bucket id"
+      },
+      "depth": {
+        "type": "number",
+        "description": "Maximum tree depth to return"
+      },
+      "include_digest": {
+        "type": "boolean",
+        "description": "Whether digest values should be included"
+      }
+    },
+    "body": null
+  }
+}

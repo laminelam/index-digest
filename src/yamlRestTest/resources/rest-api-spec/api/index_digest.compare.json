@@ -1,0 +1,54 @@
+{
+  "index_digest.compare": {
+    "stability": "experimental",
+    "url": {
+      "paths": [
+        {
+          "path": "/_plugins/_index_digest/_compare",
+          "methods": [
+            "GET"
+          ]
+        }
+      ]
+    },
+    "params": {
+      "left_index": {
+        "type": "string",
+        "description": "Left index name"
+      },
+      "left_shard_id": {
+        "type": "number",
+        "description": "Left shard id"
+      },
+      "left_allocation_id": {
+        "type": "string",
+        "description": "Left shard allocation id"
+      },
+      "right_index": {
+        "type": "string",
+        "description": "Right index name"
+      },
+      "right_shard_id": {
+        "type": "number",
+        "description": "Right shard id"
+      },
+      "right_allocation_id": {
+        "type": "string",
+        "description": "Right shard allocation id"
+      },
+      "root_level": {
+        "type": "number",
+        "description": "Root bucket level"
+      },
+      "max_mismatches": {
+        "type": "number",
+        "description": "Maximum mismatches to return"
+      },
+      "include_digest": {
+        "type": "boolean",
+        "description": "Whether digest values should be included"
+      }
+    },
+    "body": null
+  }
+}

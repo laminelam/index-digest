@@ -1,0 +1,556 @@
+<title>Hierarchical Index Digest Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground: #fbfaf8;
+    --surface: #ffffff;
+    --surface-sunk: #f2f1ee;
+    --ink: #17191c;
+    --ink-soft: #55595f;
+    --ink-faint: #8b8f96;
+    --rule: #dedcd7;
+    --accent: #0f6e78;
+    --accent-soft: #e2eff0;
+    --sealed: #9a6114;
+    --sealed-soft: #f7eddc;
+    --diverge: #a8322b;
+    --diverge-soft: #f8e6e4;
+    --measure: 68ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101215;
+      --surface: #171a1e;
+      --surface-sunk: #1d2126;
+      --ink: #e9e8e4;
+      --ink-soft: #a7abb2;
+      --ink-faint: #767b83;
+      --rule: #2b3036;
+      --accent: #5fc3ce;
+      --accent-soft: #163236;
+      --sealed: #e0a458;
+      --sealed-soft: #33260f;
+      --diverge: #e88a82;
+      --diverge-soft: #351917;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101215;
+    --surface: #171a1e;
+    --surface-sunk: #1d2126;
+    --ink: #e9e8e4;
+    --ink-soft: #a7abb2;
+    --ink-faint: #767b83;
+    --rule: #2b3036;
+    --accent: #5fc3ce;
+    --accent-soft: #163236;
+    --sealed: #e0a458;
+    --sealed-soft: #33260f;
+    --diverge: #e88a82;
+    --diverge-soft: #351917;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(1.1rem, 4vw, 2.5rem) 5rem;
+  }
+
+  .col { max-width: var(--measure); }
+
+  header.masthead {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 2rem;
+    margin-bottom: 2.75rem;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5.2vw, 3.15rem);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+  .standfirst {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: clamp(1.08rem, 2.2vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .standfirst em { color: var(--ink); font-style: italic; }
+
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.5rem, 3vw, 1.95rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 3.5rem 0 0.35rem;
+  }
+  h2:first-of-type { margin-top: 2.5rem; }
+  .kicker {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1.4rem;
+  }
+  p { margin: 0 0 1.05rem; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.87em;
+    background: var(--surface-sunk);
+    border-radius: 3px;
+    padding: 0.1em 0.36em;
+  }
+  strong { font-weight: 600; }
+
+  figure {
+    margin: 2rem 0 2.5rem;
+    padding: 1.5rem 1.5rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  figure svg { display: block; width: 100%; height: auto; min-width: 540px; color: var(--ink); }
+  figcaption {
+    font-size: 0.86rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-top: 1.1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--rule);
+    max-width: 78ch;
+  }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  .svg-label { font-family: "IBM Plex Sans", sans-serif; font-size: 12.5px; }
+  .svg-mono { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
+  .svg-title { font-family: "IBM Plex Sans", sans-serif; font-size: 13px; font-weight: 600; }
+  .svg-tiny { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.06em; }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2rem 0 2.5rem;
+  }
+  .fact { background: var(--surface); padding: 1rem 1.1rem; }
+  .fact dt {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.35rem;
+  }
+  .fact dd {
+    margin: 0;
+    font-size: 1.32rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .fact dd span { font-size: 0.78rem; font-weight: 400; color: var(--ink-soft); letter-spacing: 0; }
+
+  .note {
+    border-left: 2px solid var(--accent);
+    padding: 0.2rem 0 0.2rem 1.1rem;
+    margin: 1.6rem 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+  .note b { color: var(--ink); }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead col">
+    <p class="eyebrow">OpenSearch · Hierarchical Index Digest</p>
+    <h1>How Hierarchical Index Digest Verifies an Index</h1>
+    <p class="standfirst">A background scanner turns each shard into a tree of frozen fingerprints, so two indices can be compared in <em>milliseconds</em> instead of a full scan — and the exact range where they disagree can be pinpointed in a handful of probes.</p>
+  </header>
+
+  <div class="col">
+    <h2>The idea in one picture</h2>
+    <p class="kicker">Why old work never gets redone</p>
+    <p>Every document carries an external version field — by default <code>version_ts</code> — whose value the producer increases with every write. That number, not time or insertion order, is the axis the tree is built on. Documents are grouped into fixed ranges of it, and once the newest data has moved far enough past a range, that range is <strong>sealed</strong>: hashed once, stored, never revisited.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 900 300" role="img" aria-label="Documents laid out along a monotonic version axis, grouped into windows; windows behind the frontier and guard window are sealed and frozen, while the newest window stays open.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <line x1="40" y1="200" x2="860" y2="200" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"/>
+      <text class="svg-mono" x="40" y="228" fill="currentColor" opacity="0.75">external version →</text>
+      <text class="svg-tiny" x="860" y="228" text-anchor="end" fill="currentColor" opacity="0.55">NEWER</text>
+
+      <g>
+        <rect x="60" y="120" width="150" height="62" rx="4" fill="var(--sealed-soft)" stroke="var(--sealed)" stroke-width="1.2"/>
+        <text class="svg-title" x="135" y="146" text-anchor="middle" fill="var(--sealed)">Window 0</text>
+        <text class="svg-tiny" x="135" y="166" text-anchor="middle" fill="var(--sealed)">SEALED · frozen digest</text>
+
+        <rect x="220" y="120" width="150" height="62" rx="4" fill="var(--sealed-soft)" stroke="var(--sealed)" stroke-width="1.2"/>
+        <text class="svg-title" x="295" y="146" text-anchor="middle" fill="var(--sealed)">Window 1</text>
+        <text class="svg-tiny" x="295" y="166" text-anchor="middle" fill="var(--sealed)">SEALED · frozen digest</text>
+
+        <rect x="380" y="120" width="150" height="62" rx="4" fill="var(--sealed-soft)" stroke="var(--sealed)" stroke-width="1.2"/>
+        <text class="svg-title" x="455" y="146" text-anchor="middle" fill="var(--sealed)">Window 2</text>
+        <text class="svg-tiny" x="455" y="166" text-anchor="middle" fill="var(--sealed)">SEALED · frozen digest</text>
+      </g>
+
+      <rect x="540" y="120" width="150" height="62" rx="4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.6"/>
+      <text class="svg-title" x="615" y="146" text-anchor="middle" fill="currentColor" opacity="0.8">Window 3</text>
+      <text class="svg-tiny" x="615" y="166" text-anchor="middle" fill="currentColor" opacity="0.65">GUARD · held back</text>
+
+      <rect x="700" y="120" width="150" height="62" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+      <text class="svg-title" x="775" y="146" text-anchor="middle" fill="var(--accent)">Window 4</text>
+      <text class="svg-tiny" x="775" y="166" text-anchor="middle" fill="var(--accent)">OPEN · new writes land</text>
+
+      <g stroke="currentColor" opacity="0.45">
+        <line x1="80" y1="195" x2="80" y2="205"/><line x1="120" y1="195" x2="120" y2="205"/>
+        <line x1="175" y1="195" x2="175" y2="205"/><line x1="250" y1="195" x2="250" y2="205"/>
+        <line x1="310" y1="195" x2="310" y2="205"/><line x1="345" y1="195" x2="345" y2="205"/>
+        <line x1="405" y1="195" x2="405" y2="205"/><line x1="470" y1="195" x2="470" y2="205"/>
+        <line x1="600" y1="195" x2="600" y2="205"/><line x1="730" y1="195" x2="730" y2="205"/>
+        <line x1="790" y1="195" x2="790" y2="205"/>
+      </g>
+
+      <line x1="820" y1="96" x2="820" y2="215" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text class="svg-mono" x="814" y="90" text-anchor="end" fill="var(--accent)">frontier = highest version seen</text>
+
+      <path d="M 120 118 C 150 60, 700 55, 776 112" fill="none" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#ar)"/>
+      <text class="svg-label" x="430" y="52" text-anchor="middle" fill="var(--accent)">update to doc X gets a NEW version → lands in a NEWER window</text>
+
+      <text class="svg-label" x="60" y="268" fill="currentColor" opacity="0.8">Sealed windows are immutable: no future write can land behind the frontier, so their digests are computed once.</text>
+      <text class="svg-label" x="60" y="288" fill="currentColor" opacity="0.8">Steady-state work is proportional to new data, not to index size.</text>
+    </svg>
+    <figcaption><b>Sealing.</b> Windows behind the frontier (minus one guard window, which absorbs slightly-late arrivals) are hashed once and frozen. An update never rewrites history — it appears as a new entry in a newer window, leaving every sealed digest untouched.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h2>What happens on every scan tick</h2>
+    <p class="kicker">The pipeline, in order — each step gates the next</p>
+    <p>A scheduler fires on UTC wall-clock boundaries, so independent clusters seal at nearly the same moments. Each tick runs one shard copy at a time, and the ordering is the safety mechanism: nothing advances a watermark until the work it covers is durably recorded.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 900 420" role="img" aria-label="The scan tick pipeline: capture the global and last-refreshed checkpoints, open the reader without forcing a refresh, harvest tombstones, persist delete events, advance bookmark and lease, run late-arrival checks, then seal windows and advance the watermark.">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="ar2r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--diverge)"/>
+        </marker>
+      </defs>
+
+      <rect x="30" y="40" width="180" height="58" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity="0.95"/>
+      <text class="svg-title" x="120" y="64" text-anchor="middle" fill="currentColor">1 · Pin the snapshot</text>
+      <text class="svg-mono" x="120" y="83" text-anchor="middle" fill="currentColor" opacity="0.7">open reader · never refresh</text>
+
+      <line x1="210" y1="69" x2="268" y2="69" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+
+      <rect x="270" y="40" width="180" height="58" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="360" y="64" text-anchor="middle" fill="currentColor">2 · Harvest tombstones</text>
+      <text class="svg-mono" x="360" y="83" text-anchor="middle" fill="currentColor" opacity="0.7">deletes since bookmark</text>
+
+      <line x1="450" y1="69" x2="508" y2="69" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+
+      <rect x="510" y="40" width="180" height="58" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/>
+      <text class="svg-title" x="600" y="64" text-anchor="middle" fill="var(--accent)">3 · Persist events</text>
+      <text class="svg-mono" x="600" y="83" text-anchor="middle" fill="var(--accent)" opacity="0.85">durable, before any advance</text>
+
+      <line x1="690" y1="69" x2="748" y2="69" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+
+      <rect x="750" y="40" width="120" height="58" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="810" y="64" text-anchor="middle" fill="currentColor">4 · Advance</text>
+      <text class="svg-mono" x="810" y="83" text-anchor="middle" fill="currentColor" opacity="0.7">bookmark + lease</text>
+
+      <path d="M 810 98 L 810 128 L 120 128 L 120 158" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+
+      <rect x="30" y="160" width="230" height="66" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="145" y="184" text-anchor="middle" fill="currentColor">5 · Late-arrival checks</text>
+      <text class="svg-mono" x="145" y="203" text-anchor="middle" fill="currentColor" opacity="0.7">anything new with an OLD</text>
+      <text class="svg-mono" x="145" y="217" text-anchor="middle" fill="currentColor" opacity="0.7">version, below the watermark?</text>
+
+      <path d="M 145 226 L 145 266" fill="none" stroke="var(--diverge)" stroke-width="1.3" marker-end="url(#ar2r)"/>
+      <text class="svg-mono" x="152" y="250" fill="var(--diverge)">yes</text>
+      <rect x="30" y="268" width="230" height="52" rx="4" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.2"/>
+      <text class="svg-title" x="145" y="290" text-anchor="middle" fill="var(--diverge)">Reseal affected window(s)</text>
+      <text class="svg-mono" x="145" y="308" text-anchor="middle" fill="var(--diverge)" opacity="0.85">recompute · fold at proper bucket</text>
+
+      <line x1="260" y1="193" x2="318" y2="193" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+      <text class="svg-mono" x="289" y="185" text-anchor="middle" fill="currentColor" opacity="0.7">no</text>
+
+      <rect x="320" y="160" width="200" height="66" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="420" y="184" text-anchor="middle" fill="currentColor">6 · Execute reseals</text>
+      <text class="svg-mono" x="420" y="203" text-anchor="middle" fill="currentColor" opacity="0.7">any repair requests</text>
+      <text class="svg-mono" x="420" y="217" text-anchor="middle" fill="currentColor" opacity="0.7">left by a comparison</text>
+
+      <line x1="520" y1="193" x2="578" y2="193" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+
+      <rect x="580" y="160" width="290" height="66" rx="4" fill="var(--sealed-soft)" stroke="var(--sealed)" stroke-width="1.3"/>
+      <text class="svg-title" x="725" y="184" text-anchor="middle" fill="var(--sealed)">7 · Seal newly-eligible windows</text>
+      <text class="svg-mono" x="725" y="203" text-anchor="middle" fill="var(--sealed)" opacity="0.9">hash leaves (live docs + delete events),</text>
+      <text class="svg-mono" x="725" y="217" text-anchor="middle" fill="var(--sealed)" opacity="0.9">reduce parents, store, advance watermark</text>
+
+      <path d="M 725 226 L 725 262" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"/>
+      <rect x="580" y="264" width="290" height="56" rx="4" fill="var(--surface)" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3"/>
+      <text class="svg-title" x="725" y="287" text-anchor="middle" fill="currentColor">.index_digest system index</text>
+      <text class="svg-mono" x="725" y="306" text-anchor="middle" fill="currentColor" opacity="0.7">bucket digests · progress · delete events</text>
+
+      <text class="svg-label" x="30" y="356" fill="currentColor" opacity="0.8">The order is the guarantee: events are durable (3) before the bookmark moves (4), so a crash</text>
+      <text class="svg-label" x="30" y="376" fill="currentColor" opacity="0.8">re-reads the same tombstones rather than losing them. A retention lease stops Lucene from</text>
+      <text class="svg-label" x="30" y="396" fill="currentColor" opacity="0.8">merging away a tombstone before it has been recorded.</text>
+    </svg>
+    <figcaption><b>One tick.</b> Steps 1–4 capture deletes durably; step 5 catches contract violations at the door; steps 6–7 do the repair and the sealing. Every path either advances cleanly or fails loudly — nothing is skipped silently.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h2>Comparing two indices</h2>
+    <p class="kicker">Equal subtrees are skipped whole</p>
+    <p>Comparison never reads documents. It reads digests, top-down: if two nodes match, everything beneath them matches and is skipped; if they differ, the search descends into the differing child only. A divergence anywhere in a billion-document index is found in a handful of round trips.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 900 340" role="img" aria-label="Two hash trees compared top-down: matching subtrees are skipped, and the search descends only through differing nodes until it reaches the exact divergent leaf bucket.">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--diverge)"/>
+        </marker>
+      </defs>
+
+      <text class="svg-title" x="30" y="26" fill="currentColor">EAST</text>
+      <text class="svg-title" x="870" y="26" text-anchor="end" fill="currentColor">WEST</text>
+
+      <g>
+        <rect x="150" y="40" width="90" height="34" rx="3" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.3"/>
+        <text class="svg-mono" x="195" y="61" text-anchor="middle" fill="var(--diverge)">root a1f4…</text>
+
+        <rect x="70" y="120" width="90" height="34" rx="3" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity="0.75"/>
+        <text class="svg-mono" x="115" y="141" text-anchor="middle" fill="currentColor" opacity="0.75">7c02…</text>
+        <rect x="230" y="120" width="90" height="34" rx="3" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.3"/>
+        <text class="svg-mono" x="275" y="141" text-anchor="middle" fill="var(--diverge)">b930…</text>
+
+        <rect x="190" y="200" width="90" height="34" rx="3" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity="0.75"/>
+        <text class="svg-mono" x="235" y="221" text-anchor="middle" fill="currentColor" opacity="0.75">41de…</text>
+        <rect x="300" y="200" width="90" height="34" rx="3" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.5"/>
+        <text class="svg-mono" x="345" y="221" text-anchor="middle" fill="var(--diverge)">ee71…</text>
+
+        <line x1="195" y1="74" x2="115" y2="120" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+        <line x1="195" y1="74" x2="275" y2="120" stroke="var(--diverge)" stroke-width="1.4"/>
+        <line x1="275" y1="154" x2="235" y2="200" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+        <line x1="275" y1="154" x2="345" y2="200" stroke="var(--diverge)" stroke-width="1.4"/>
+      </g>
+
+      <g>
+        <rect x="660" y="40" width="90" height="34" rx="3" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.3"/>
+        <text class="svg-mono" x="705" y="61" text-anchor="middle" fill="var(--diverge)">root 9b27…</text>
+
+        <rect x="740" y="120" width="90" height="34" rx="3" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity="0.75"/>
+        <text class="svg-mono" x="785" y="141" text-anchor="middle" fill="currentColor" opacity="0.75">7c02…</text>
+        <rect x="580" y="120" width="90" height="34" rx="3" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.3"/>
+        <text class="svg-mono" x="625" y="141" text-anchor="middle" fill="var(--diverge)">c115…</text>
+
+        <rect x="620" y="200" width="90" height="34" rx="3" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1" opacity="0.75"/>
+        <text class="svg-mono" x="665" y="221" text-anchor="middle" fill="currentColor" opacity="0.75">41de…</text>
+        <rect x="510" y="200" width="90" height="34" rx="3" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.5"/>
+        <text class="svg-mono" x="555" y="221" text-anchor="middle" fill="var(--diverge)">missing</text>
+
+        <line x1="705" y1="74" x2="785" y2="120" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+        <line x1="705" y1="74" x2="625" y2="120" stroke="var(--diverge)" stroke-width="1.4"/>
+        <line x1="625" y1="154" x2="665" y2="200" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+        <line x1="625" y1="154" x2="555" y2="200" stroke="var(--diverge)" stroke-width="1.4"/>
+      </g>
+
+      <line x1="245" y1="57" x2="655" y2="57" stroke="var(--diverge)" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <text class="svg-mono" x="450" y="50" text-anchor="middle" fill="var(--diverge)">differ → descend</text>
+
+      <line x1="165" y1="137" x2="735" y2="137" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.55"/>
+      <text class="svg-mono" x="450" y="130" text-anchor="middle" fill="currentColor" opacity="0.7">match → skip this whole subtree</text>
+
+      <line x1="395" y1="217" x2="505" y2="217" stroke="var(--diverge)" stroke-width="1.2" stroke-dasharray="4 3"/>
+
+      <rect x="300" y="266" width="300" height="46" rx="4" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.3"/>
+      <text class="svg-title" x="450" y="285" text-anchor="middle" fill="var(--diverge)">leaf bucket 5 299 200 · missing_right</text>
+      <text class="svg-mono" x="450" y="303" text-anchor="middle" fill="var(--diverge)" opacity="0.85">a 1024-wide version range to inspect or repair</text>
+      <path d="M 345 236 L 400 264" fill="none" stroke="var(--diverge)" stroke-width="1.3" marker-end="url(#ar3)"/>
+      <path d="M 555 236 L 500 264" fill="none" stroke="var(--diverge)" stroke-width="1.3" marker-end="url(#ar3)"/>
+    </svg>
+    <figcaption><b>Drill-down.</b> Each level narrows the search, so localizing a single divergent document costs O(log n) digest reads — measured at 3–4 ms over 1.6 M-document trees — and the answer is a narrow version range, not "these indices differ".</figcaption>
+  </figure>
+
+  <div class="col">
+    <h2>Deletes, without breaking immutability</h2>
+    <p class="kicker">The problem the RFC left open</p>
+    <p>A delete removes a document and leaves nothing on the version axis — so a delete that reached one cluster and not the other would be invisible to both trees. The fix uses what OpenSearch already writes: every delete leaves a <strong>tombstone</strong> carrying the doc's id and the external version supplied with the delete. The scanner reads those, turns them into durable events, and folds them into the digest of the window they belong to — a <em>new</em> window, never the old one.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 900 300" role="img" aria-label="A delete on doc X leaves a tombstone with a new version; the scanner harvests it into a delete event which is folded into a newer window, while the original window keeps its sealed entry.">
+      <defs>
+        <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <rect x="30" y="30" width="250" height="62" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="155" y="53" text-anchor="middle" fill="currentColor">DELETE /idx/_doc/X</text>
+      <text class="svg-mono" x="155" y="73" text-anchor="middle" fill="currentColor" opacity="0.75">?version=5300000&amp;version_type=external</text>
+
+      <path d="M 280 61 L 340 61" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+      <rect x="342" y="30" width="220" height="62" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="452" y="53" text-anchor="middle" fill="currentColor">engine writes a tombstone</text>
+      <text class="svg-mono" x="452" y="73" text-anchor="middle" fill="currentColor" opacity="0.75">_id=X · _version=5300000</text>
+
+      <path d="M 562 61 L 622 61" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+      <rect x="624" y="30" width="246" height="62" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/>
+      <text class="svg-title" x="747" y="53" text-anchor="middle" fill="var(--accent)">scanner harvests → delete event</text>
+      <text class="svg-mono" x="747" y="73" text-anchor="middle" fill="var(--accent)" opacity="0.85">durable in .index_digest, kept for good</text>
+
+      <line x1="60" y1="215" x2="860" y2="215" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar4)"/>
+
+      <rect x="90" y="142" width="230" height="60" rx="4" fill="var(--sealed-soft)" stroke="var(--sealed)" stroke-width="1.2"/>
+      <text class="svg-title" x="205" y="165" text-anchor="middle" fill="var(--sealed)">old window · SEALED long ago</text>
+      <text class="svg-mono" x="205" y="187" text-anchor="middle" fill="var(--sealed)" opacity="0.9">ADD (v=100 000, X) — untouched</text>
+
+      <rect x="560" y="142" width="270" height="60" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+      <text class="svg-title" x="695" y="165" text-anchor="middle" fill="var(--accent)">newer window · sealed with the event</text>
+      <text class="svg-mono" x="695" y="187" text-anchor="middle" fill="var(--accent)" opacity="0.9">DELETE (v=5 300 000, X) — new entry</text>
+
+      <path d="M 747 92 L 747 138" fill="none" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#ar4)"/>
+
+      <text class="svg-label" x="90" y="252" fill="currentColor" opacity="0.85">A missed delete now shows up the same way a missed write does: as a difference in a new bucket,</text>
+      <text class="svg-label" x="90" y="272" fill="currentColor" opacity="0.85">localized by the same drill-down — while every sealed window stays exactly as it was.</text>
+    </svg>
+    <figcaption><b>Deletes as events.</b> The delete travels on the same monotonic axis as writes, so it lands in an open window and gets sealed there. The document's original entry stays frozen in its old window — immutability is preserved, and the delete is still visible to comparison.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h2>When timing plays tricks</h2>
+    <p class="kicker">Detect, repair, and tell the two apart</p>
+    <p>Two clusters seal the same window at slightly different moments. If a delete lands between those moments, one side sealed the window with the document and the other without it — identical data, different digests. The tool cannot prevent this (the delay is replication lag, not something the scanner controls), so instead it repairs it, and uses the repair itself to distinguish a timing artifact from real divergence.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 900 320" role="img" aria-label="A comparison mismatch enqueues a reseal request; each side recomputes that one window from current data, after which timing artifacts disappear while genuine divergence remains and is reported without repeating.">
+      <defs>
+        <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="ar5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+        </marker>
+        <marker id="ar5d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--diverge)"/>
+        </marker>
+      </defs>
+
+      <rect x="30" y="36" width="196" height="58" rx="4" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.2"/>
+      <text class="svg-title" x="128" y="59" text-anchor="middle" fill="var(--diverge)">compare finds a mismatch</text>
+      <text class="svg-mono" x="128" y="78" text-anchor="middle" fill="var(--diverge)" opacity="0.85">window W, leaf bucket B</text>
+
+      <line x1="226" y1="65" x2="284" y2="65" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar5)"/>
+
+      <rect x="286" y="36" width="196" height="58" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="384" y="59" text-anchor="middle" fill="currentColor">reseal request, both sides</text>
+      <text class="svg-mono" x="384" y="78" text-anchor="middle" fill="currentColor" opacity="0.75">a small marker, no data touched</text>
+
+      <line x1="482" y1="65" x2="540" y2="65" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar5)"/>
+
+      <rect x="542" y="36" width="230" height="58" rx="4" fill="var(--surface-sunk)" stroke="currentColor" stroke-width="1"/>
+      <text class="svg-title" x="657" y="59" text-anchor="middle" fill="currentColor">each scanner recomputes W</text>
+      <text class="svg-mono" x="657" y="78" text-anchor="middle" fill="currentColor" opacity="0.75">from live docs + kept events</text>
+
+      <path d="M 657 94 L 657 118 L 250 118 L 250 152" fill="none" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#ar5a)"/>
+      <path d="M 657 94 L 657 118 L 640 118 L 640 152" fill="none" stroke="var(--diverge)" stroke-width="1.4" marker-end="url(#ar5d)"/>
+
+      <rect x="90" y="154" width="320" height="74" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+      <text class="svg-title" x="250" y="178" text-anchor="middle" fill="var(--accent)">It was a timing artifact</text>
+      <text class="svg-mono" x="250" y="198" text-anchor="middle" fill="var(--accent)" opacity="0.9">both sides now derive W from the same</text>
+      <text class="svg-mono" x="250" y="214" text-anchor="middle" fill="var(--accent)" opacity="0.9">current reality → digests converge → equal</text>
+
+      <rect x="480" y="154" width="320" height="74" rx="4" fill="var(--diverge-soft)" stroke="var(--diverge)" stroke-width="1.4"/>
+      <text class="svg-title" x="640" y="178" text-anchor="middle" fill="var(--diverge)">The data really differs</text>
+      <text class="svg-mono" x="640" y="198" text-anchor="middle" fill="var(--diverge)" opacity="0.9">mismatch survives the reseal → reported,</text>
+      <text class="svg-mono" x="640" y="214" text-anchor="middle" fill="var(--diverge)" opacity="0.9">and not re-requested (cooldown) → no loop</text>
+
+      <text class="svg-label" x="90" y="266" fill="currentColor" opacity="0.85">The repair doubles as the test: anything a reseal can dissolve was never a real difference,</text>
+      <text class="svg-label" x="90" y="286" fill="currentColor" opacity="0.85">and anything that survives one is genuine — confirmed rather than merely suspected.</text>
+    </svg>
+    <figcaption><b>Self-healing.</b> Comparison enqueues a repair; the owning scanners recompute just that window on their next tick. Artifacts vanish, real divergence is confirmed, and a cooldown keeps a genuine difference from triggering repairs forever.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h2>Measured on a live cluster</h2>
+    <p class="kicker">1.6 M documents per index, scheduler running throughout</p>
+  </div>
+
+  <dl class="facts">
+    <div class="fact"><dt>Ingest overhead</dt><dd>12.5<span>% worst case</span></dd></div>
+    <div class="fact"><dt>Backlog catch-up</dt><dd>40<span>s · 2.4 M docs</span></dd></div>
+    <div class="fact"><dt>Compare latency</dt><dd>3–4<span>ms</span></dd></div>
+    <div class="fact"><dt>Steady tick</dt><dd>0.3–1<span>s</span></dd></div>
+    <div class="fact"><dt>Storage</dt><dd>~3<span>% of corpus</span></dd></div>
+  </dl>
+
+  <div class="col">
+    <p>The overhead figure is a deliberate worst case: the scanner was sealing continuously on a single node that was simultaneously absorbing bulk ingest. At a production cadence — a tick every few minutes, sealing a small increment — the duty cycle is a fraction of a percent.</p>
+
+    <div class="note"><b>What it does not do.</b> Content is not hashed: the tree assumes a document's external version changes whenever its contents change. Deletes must be issued with an external version. Replica-to-replica comparison is supported only when writes are quiesced. These are stated boundaries, not gaps discovered later — the tool reports honestly inside them and fails loudly outside them.</div>
+  </div>
+
+  <footer class="col">
+    Hierarchical Index Digest (HID) for OpenSearch · RFC opensearch-project/OpenSearch#20889
+  </footer>
+
+</div>

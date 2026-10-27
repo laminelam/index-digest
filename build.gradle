@@ -1,0 +1,147 @@
+import org.opensearch.gradle.test.RestIntegTestTask
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'opensearch.opensearchplugin'
+apply plugin: 'opensearch.yaml-rest-test'
+apply plugin: 'opensearch.pluginzip'
+apply plugin: 'opensearch.java-agent'
+
+def pluginName = 'index-digest'
+def pluginDescription = 'Hierarchical Index Digest for incremental OpenSearch index consistency validation and anti-entropy'
+def packagePath = 'org.opensearch'
+def pathToPlugin = 'indexdigest'
+def pluginClassName = 'IndexDigestPlugin'
+group = "org.opensearch"
+
+java {
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.register("preparePluginPathDirs") {
+    mustRunAfter clean
+    doLast {
+        def newPath = pathToPlugin.replace(".", "/")
+        mkdir "src/main/java/$packagePath/$newPath"
+        mkdir "src/test/java/$packagePath/$newPath"
+        mkdir "src/yamlRestTest/java/$packagePath/$newPath"
+    }
+}
+
+publishing {
+    publications {
+        pluginZip(MavenPublication) { publication ->
+            pom {
+              name = pluginName
+              description = pluginDescription
+              licenses {
+                license {
+                  name = "The Apache License, Version 2.0"
+                  url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                }
+              }
+              developers {
+                developer {
+                  name = "OpenSearch"
+                  url = "https://github.com/opensearch-project/index-digest"
+                }
+              }
+            }
+        }
+    }
+}
+
+opensearchplugin {
+    name = pluginName
+    description = pluginDescription
+    classname = "${packagePath}.${pathToPlugin}.${pluginClassName}"
+    licenseFile = rootProject.file('LICENSE.txt')
+    noticeFile = rootProject.file('NOTICE.txt')
+}
+
+// This requires an additional Jar not published as part of build-tools
+loggerUsageCheck.enabled = false
+
+// No need to validate pom, as we do not upload to maven/sonatype
+validateNebulaPom.enabled = false
+
+buildscript {
+    ext {
+        opensearch_version = System.getProperty("opensearch.version", "3.5.0-SNAPSHOT")
+    }
+
+    repositories {
+        mavenLocal()
+        maven { url = uri("https://ci.opensearch.org/ci/dbc/snapshots/maven/") }
+        mavenCentral()
+        maven { url = uri("https://plugins.gradle.org/m2/") }
+    }
+
+    dependencies {
+        classpath "org.opensearch.gradle:build-tools:${opensearch_version}"
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven { url = uri("https://ci.opensearch.org/ci/dbc/snapshots/maven/") }
+    mavenCentral()
+    maven { url = uri("https://plugins.gradle.org/m2/") }
+}
+
+configurations {
+    all {
+        resolutionStrategy {
+            force "com.google.errorprone:error_prone_annotations:${versions.error_prone_annotations}"
+        }
+    }
+}
+
+test {
+    include '**/*Tests.class'
+}
+
+task integTest(type: RestIntegTestTask) {
+    description = "Run tests against a cluster"
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+}
+tasks.named("check").configure { dependsOn(integTest) }
+
+integTest {
+    // The --debug-jvm command-line option makes the cluster debuggable; this makes the tests debuggable
+    if (System.getProperty("test.debug") != null) {
+        jvmArgs '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005'
+    }
+}
+
+testClusters.integTest {
+    testDistribution = "INTEG_TEST"
+
+    // This installs our plugin into the testClusters
+    plugin(project.tasks.bundlePlugin.archiveFile)
+
+    // The ITs drive every tick explicitly via _run_once and disable the
+    // scheduler themselves; starting it disabled removes the window between
+    // tests where a background tick could race an explicit trigger.
+    setting 'plugins.index_digest.enabled', 'false'
+    setting 'plugins.index_digest.indices', 'test-index-digest'
+    setting 'plugins.index_digest.scan_interval', '5s'
+}
+
+run {
+    useCluster testClusters.integTest
+}
+
+// updateVersion: Task to auto update version to the next development iteration
+task updateVersion {
+    onlyIf { System.getProperty('newVersion') }
+    doLast {
+        ext.newVersion = System.getProperty('newVersion')
+        println "Setting version to ${newVersion}."
+         // String tokenization to support -SNAPSHOT
+        ant.replaceregexp(file:'build.gradle', match: '"opensearch.version", "\\d.*"', replace: '"opensearch.version", "' + newVersion.tokenize('-')[0] + '-SNAPSHOT"', flags:'g', byline:true)
+    }
+}
